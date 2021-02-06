@@ -36,9 +36,9 @@ hp3 = [-space, -space, 0]
 
 filepath, files = "/Users/reedchen/OneDrive - Duke University/Robotics/Data/matlab_custom_-2_7_4_.csv", range(1,5)
 
-gx = -2
-gy = 7
-gz = 4
+gx = -1
+gy = 1
+gz = 1
 
 def read_data(filepath):
     df = pd.read_csv(filepath, skiprows=[1], skipinitialspace=True)
@@ -242,8 +242,8 @@ if __name__ == "__main__":
 
             guessedLocation = (gx, gy, gz)
 
-            #data_val = (hp0, hp1, hp2, hp3, diff01, diff02, diff03)
-            data_val = (hp0, hp1, hp2, hp3, distance(hp0, hp1), distance(hp0, hp2), distance(hp0, hp3))
+            data_val = (hp0, hp1, hp2, hp3, diff01, diff02, diff03)
+            #data_val = (hp0, hp1, hp2, hp3, distance(hp0, hp1), distance(hp0, hp2), distance(hp0, hp3))
             x, y, z = fsolve(system, guessedLocation, data_val)
 
             print(f"x: {x}\ty: {y}\tz: {z}")
