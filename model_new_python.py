@@ -17,7 +17,7 @@ def dis(x, y, z, x1, y1, z1):
 sf = 625000  # sampling freq
 pinger_frequency = 40000
 vs = 1511.5  # velocity of sound
-samples = 2.048 * 2 * sf
+samples = math.floor(2.048 * 2 * sf)
 noise = -60  # noise level in decibels
 
 # pinger location
@@ -28,10 +28,12 @@ pz = 4
 space = 0.0115  # spacing between hydrophones
 
 # hydrophone location
-hp1 = [0, 0, 0]
-hp2 = [0, -space, 0]
-hp3 = [-space, 0, 0]
-hp4 = [-space, -space, 0]
+hp1 = [0, 0, 0] # sqrt((px-x)^2+(py-y)^2+(pz-z)^2) = sqrt(69) = 8.307
+hp2 = [0, -space, 0] # sqrt(69.161) = 8.316
+hp3 = [-space, 0, 0] # sqrt(68.954) = 8.304
+hp4 = [-space, -space, 0] # sqrt(69.115) = 8.314
+
+# in order from closest to pinger to farthest: h3, h1, h4, h2
 
 # cheap hydrophone location
 # space = .3
@@ -50,58 +52,56 @@ dis4 = dis(px, py, pz, hp4[0], hp4[1], hp4[2])
 # dis4
 
 # assume pinger ping at t = 0 for 4ms, sound arrives at hydrophone with amplitude v = 5V
-ping1 = np.zeros(math.floor(samples))
-ping2 = np.zeros(math.floor(samples))
-ping3 = np.zeros(math.floor(samples))
-ping4 = np.zeros(math.floor(samples))
+ping1 = np.zeros(samples)
+ping2 = np.zeros(samples)
+ping3 = np.zeros(samples)
+ping4 = np.zeros(samples)
 
-s = np.arange(1, math.floor(0.004 * sf), 1 / sf)
+s = np.arange(1, math.floor(0.004 * sf))
 ping = 0.1 * np.sin((s / sf * pinger_frequency * 2 * math.pi))  # complex conjugate transpose (np.matrix.H)
 
 buffer = 40000
 
-# sorry, i will make this part more efficient
-ping1[math.ceil(dis1 / vs * sf) + 1 + buffer: math.ceil((dis1 / vs + 0.004) * sf) + buffer + 1] = ping
+ping1[math.ceil(dis1 / vs * sf) + 1 + buffer: math.ceil((dis1 / vs + 0.004) * sf) + buffer] = ping
 
-ping2[math.ceil(dis2 / vs * sf) + 1 + buffer: math.ceil((dis2 / vs + 0.004) * sf) + buffer + 1] = ping
+ping2[math.ceil(dis2 / vs * sf) + 1 + buffer: math.ceil((dis2 / vs + 0.004) * sf) + buffer] = ping
 
-ping3[math.ceil(dis3 / vs * sf) + 1 + buffer: math.ceil((dis3 / vs + 0.004) * sf) + buffer + 1] = ping
+ping3[math.ceil(dis3 / vs * sf) + 1 + buffer: math.ceil((dis3 / vs + 0.004) * sf) + buffer] = ping
 
-ping4[math.ceil(dis4 / vs * sf) + 1 + buffer: math.ceil((dis4 / vs + 0.004) * sf) + buffer + 1] = ping
+ping4[math.ceil(dis4 / vs * sf) + 1 + buffer: math.ceil((dis4 / vs + 0.004) * sf) + buffer] = ping
 
 ping1[math.ceil(dis1 / vs * sf + 2.048 * sf) + 1 + buffer:
-      math.ceil((dis1 / vs + 0.004) * sf + 2.048 * sf) + buffer + 1] = ping
+      math.ceil((dis1 / vs + 0.004) * sf + 2.048 * sf) + buffer] = ping
 
 ping2[math.ceil(dis2 / vs * sf + 2.048 * sf) + 1 + buffer:
-      math.ceil((dis2 / vs + 0.004) * sf + 2.048 * sf) + buffer + 1] = ping
+      math.ceil((dis2 / vs + 0.004) * sf + 2.048 * sf) + buffer] = ping
 
 ping3[math.ceil(dis3 / vs * sf + 2.048 * sf) + 1 + buffer:
-      math.ceil((dis3 / vs + 0.004) * sf + 2.048 * sf) + buffer + 1] = ping
+      math.ceil((dis3 / vs + 0.004) * sf + 2.048 * sf) + buffer] = ping
 
 ping4[math.ceil(dis4 / vs * sf + 2.048 * sf) + 1 + buffer:
-      math.ceil((dis4 / vs + 0.004) * sf + 2.048 * sf) + buffer + 1] = ping
+      math.ceil((dis4 / vs + 0.004) * sf + 2.048 * sf) + buffer] = ping
 
-for i in range(1, 5):
-    mean = (-76 + noise) / 2
-    std = abs((-76 - noise) / 6)
+# for i in range(1, 5):
+mean = 0
+std = .01
 
-    h1 = ping1 + np.random.normal(mean, std, samples)
-    h2 = ping2 + np.random.normal(mean, std, samples)
-    h3 = ping3 + np.random.normal(mean, std, samples)
-    h4 = ping4 + np.random.normal(mean, std, samples)
+h1 = ping1 + np.random.normal(mean, std, samples)
+h2 = ping2 + np.random.normal(mean, std, samples)
+h3 = ping3 + np.random.normal(mean, std, samples)
+h4 = ping4 + np.random.normal(mean, std, samples)
 
-    t = Table([h1, h2, h3, h4], names=('Channel 0', 'Channel 1', 'Channel 2', 'Channel 3'))
-    with open(('/Users/erinliu/Desktop/Duke/Robotics/matlab_custom(%d).csv', i),
-              'w') as outputfile:
-        outputfile.write(tabulate(t))
+# t = Table([h1, h2, h3, h4], names=('Channel 0', 'Channel 1', 'Channel 2', 'Channel 3'))
+# with open(('/Users/erinliu/Desktop/Duke/Robotics/matlab_custom(%d).csv', i),
+#           'w') as outputfile:
+#     outputfile.write(tabulate(t))
 
-# fig, axs = plt.subplots(4)
-# fig.subtitle('Sine Waves')
-# axs[0].plot(h1)
-# axs[1].plot(h2)
-# axs[2].plot(h3)
-# axs[3].plot(h4)
-# plt.show()
+plt.plot(h1)
+plt.plot(h2)
+plt.plot(h3)
+plt.plot(h4)
+plt.legend(['h1', 'h2', 'h3', 'h4'])
+plt.show()
 
 # # p12a = np.zeros(12)
 # # p13a = np.zeros(12)
