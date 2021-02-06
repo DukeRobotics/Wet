@@ -25,13 +25,19 @@ px = -2
 py = 7
 pz = 4
 
+# expensive hydrophone location
 space = 0.0115  # spacing between hydrophones
+hp1 = [0, 0, 0]  # sqrt((px-x)^2+(py-y)^2+(pz-z)^2) = sqrt(69) = 8.307
+hp2 = [0, -space, 0]  # sqrt(69.161) = 8.316
+hp3 = [-space, 0, 0]  # sqrt(68.954) = 8.304
+hp4 = [-space, -space, 0]  # sqrt(69.115) = 8.314
 
-# hydrophone location
-hp1 = [0, 0, 0] # sqrt((px-x)^2+(py-y)^2+(pz-z)^2) = sqrt(69) = 8.307
-hp2 = [0, -space, 0] # sqrt(69.161) = 8.316
-hp3 = [-space, 0, 0] # sqrt(68.954) = 8.304
-hp4 = [-space, -space, 0] # sqrt(69.115) = 8.314
+# cheap hydrophone location
+space = .3
+hp1 = [0, 0, 0]
+hp2 = [space, 0, 0]
+hp3 = [0, space, 0]
+hp4 = [0, 0, space]
 
 # in order from closest to pinger to farthest: h3, h1, h4, h2
 
@@ -46,10 +52,6 @@ dis1 = dis(px, py, pz, hp1[0], hp1[1], hp1[2])
 dis2 = dis(px, py, pz, hp2[0], hp2[1], hp2[2])
 dis3 = dis(px, py, pz, hp3[0], hp3[1], hp3[2])
 dis4 = dis(px, py, pz, hp4[0], hp4[1], hp4[2])
-# dis1
-# dis2
-# dis3
-# dis4
 
 # assume pinger ping at t = 0 for 4ms, sound arrives at hydrophone with amplitude v = 5V
 ping1 = np.zeros(samples)
@@ -82,19 +84,17 @@ ping3[math.ceil(dis3 / vs * sf + 2.048 * sf) + 1 + buffer:
 ping4[math.ceil(dis4 / vs * sf + 2.048 * sf) + 1 + buffer:
       math.ceil((dis4 / vs + 0.004) * sf + 2.048 * sf) + buffer] = ping
 
-# for i in range(1, 5):
-mean = 0
-std = .01
+for i in range(1, 5):
+    mean = 0
+    std = 0.01
 
-h1 = ping1 + np.random.normal(mean, std, samples)
-h2 = ping2 + np.random.normal(mean, std, samples)
-h3 = ping3 + np.random.normal(mean, std, samples)
-h4 = ping4 + np.random.normal(mean, std, samples)
+    h1 = ping1 + np.random.normal(mean, std, samples)
+    h2 = ping2 + np.random.normal(mean, std, samples)
+    h3 = ping3 + np.random.normal(mean, std, samples)
+    h4 = ping4 + np.random.normal(mean, std, samples)
 
-# t = Table([h1, h2, h3, h4], names=('Channel 0', 'Channel 1', 'Channel 2', 'Channel 3'))
-# with open(('/Users/erinliu/Desktop/Duke/Robotics/matlab_custom(%d).csv', i),
-#           'w') as outputfile:
-#     outputfile.write(tabulate(t))
+    df = pandas.DataFrame({'Channel 0': h1, 'Channel 1': h2, 'Channel 2': h3, 'Channel 3': h4})
+    df.to_csv(f'/Users/erinliu/Desktop/Duke/Robotics/Acoustics/python_hp_data({i}).csv')
 
 plt.plot(h1)
 plt.plot(h2)
